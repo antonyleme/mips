@@ -2,8 +2,9 @@ import {
   parseRd,
   parseRt,
   parseRs,
-  parseImm,
+  parseImmediate,
   parseOffset,
+  parseAddress,
 } from '../helpers/parsers';
 
 import ACTIONS_MAP from './actions-map';
@@ -139,7 +140,7 @@ export const addi = (
 ) => {
   const rs = parseRs(binaryInstruction);
   const rt = parseRt(binaryInstruction);
-  const imm = parseImm(binaryInstruction);
+  const imm = parseImmediate(binaryInstruction);
 
   if (action === ACTIONS_MAP.DECODE) {
     return `ADDI R${rt}, R${rs}, ${imm}`;
@@ -322,4 +323,88 @@ export const storeWord = (
 
   //SHOULD_STALL
   return [`R${rs}`, `R${rt}`];
+};
+
+/**
+ *  Instrução correspondente a and rd, rs, rt
+ * */
+export const and = (
+  binaryInstruction,
+  action,
+  registers,
+  createRegisterIfItDoesntExist
+) => {
+  const rs = parseRs(binaryInstruction);
+  const rt = parseRt(binaryInstruction);
+  const rd = parseRd(binaryInstruction);
+
+  if (action === ACTIONS_MAP.DECODE) {
+    return `AND R${rd}, R${rs}, R${rt}`;
+  }
+};
+
+/**
+ *  Instrução correspondente a or rd, rs, rt
+ * */
+export const or = (
+  binaryInstruction,
+  action,
+  registers,
+  createRegisterIfItDoesntExist
+) => {
+  const rs = parseRs(binaryInstruction);
+  const rt = parseRt(binaryInstruction);
+  const rd = parseRd(binaryInstruction);
+
+  if (action === ACTIONS_MAP.DECODE) {
+    return `OR R${rd}, R${rs}, R${rt}`;
+  }
+};
+
+/**
+ *  Instrução correspondente a jr rs
+ * */
+export const jr = (
+  binaryInstruction,
+  action,
+  registers,
+  createRegisterIfItDoesntExist
+) => {
+  const rs = parseRs(binaryInstruction);
+
+  if (action === ACTIONS_MAP.DECODE) {
+    return `JR R${rs}`;
+  }
+};
+
+/**
+ *  Instrução correspondente a sw rt, offset(rs)
+ * */
+export const j = (
+  binaryInstruction,
+  action,
+  registers,
+  createRegisterIfItDoesntExist
+) => {
+  const address = parseAddress(binaryInstruction);
+
+  if (action === ACTIONS_MAP.DECODE) {
+    return `J ${address}`;
+  }
+};
+
+/**
+ *  Instrução correspondente a sw rt, offset(rs)
+ * */
+export const jal = (
+  binaryInstruction,
+  action,
+  registers,
+  createRegisterIfItDoesntExist
+) => {
+  const address = parseAddress(binaryInstruction);
+
+  if (action === ACTIONS_MAP.DECODE) {
+    return `JAL ${address}`;
+  }
 };

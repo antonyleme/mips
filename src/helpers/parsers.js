@@ -16,6 +16,10 @@ export const parseOffset = (binaryString) => {
   return parseInt(binaryString.substring(16, 32), 2);
 };
 
-export const parseImm = (binaryString) => {
+export const parseImmediate = (binaryString) => {
   return uintToInt(parseInt(binaryString.substring(16, 32), 2), 10);
+};
+
+export const parseAddress = (binaryString) => {
+  return parseInt(binaryString.substring(6, 32), 2);
 };

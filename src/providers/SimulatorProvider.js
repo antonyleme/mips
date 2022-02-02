@@ -8,6 +8,11 @@ import {
   branchNotEqual,
   loadWord,
   storeWord,
+  and,
+  or,
+  j,
+  jal,
+  // jr,
 } from '../helpers/instructions';
 import sort from '../helpers/sort';
 import ACTIONS_MAP from '../helpers/actions-map';
@@ -17,7 +22,6 @@ export const SimulatorContext = createContext();
 function SimulatorProvider({ children }) {
   const [file, setFile] = useState();
   const [text, setText] = useState();
-  const [loadedText, setLoadedText] = useState();
 
   const [submited, setSubmited] = useState(false);
 
@@ -35,12 +39,11 @@ function SimulatorProvider({ children }) {
   const submit = (option) => {
     if (option === 'direct') {
       setSubmited(true);
-      simulate();
-      return 1;
+      return simulate();
     }
 
+    simulate();
     setSubmited(true);
-    return 0;
   };
 
   /* Função para resetar todos os states*/
@@ -53,25 +56,6 @@ function SimulatorProvider({ children }) {
     setPcCounter(0);
     setCycleCounter(0);
     setSubmited(false);
-    setLoadedText(null);
-  };
-
-  /* Função para iniciar a simulação*/
-  const simulate = () => {
-    if (file) readFile();
-  };
-
-  /* Função para ler o arquivo do input e setar o txt no state*/
-  const readFile = () => {
-    const reader = new FileReader();
-    reader.readAsText(file, 'UTF-8');
-    reader.onload = function (evt) {
-      setLoadedText(evt.target.result);
-      loadInstructions(evt.target.result);
-      loadMemories(evt.target.result);
-      loadRegisters(evt.target.result);
-      startExecution();
-    };
   };
 
   /* Função para adicionar novo registrador no state */
@@ -79,15 +63,39 @@ function SimulatorProvider({ children }) {
     setRegisters((oldRegisters) => [...oldRegisters, { name, value }]);
   };
 
-  /* Função para adicionar novo registrador no state */
+  /* Função para adicionar nova memória no state */
   const addMemory = (position, value) => {
     setMemories((oldMemories) => [...oldMemories, { position, value }]);
   };
 
-  /* Função para adicionar novo registrador no state */
+  /* Função para adicionar nova instrução no state */
   const addInstructions = useCallback((instruction) => {
     setInstructions((oldInstructions) => [...oldInstructions, instruction]);
   }, []);
+
+  /* Função para iniciar a simulação*/
+  const simulate = () => {
+    if (file) readFile();
+    if (text) readText();
+  };
+
+  /* Função para ler o texto do input text*/
+  const readText = () => {
+    loadInstructions(text);
+    loadRegisters(text);
+    startExecution();
+  };
+
+  /* Função para ler o arquivo do input e setar o txt no state*/
+  const readFile = () => {
+    const reader = new FileReader();
+    reader.readAsText(file, 'UTF-8');
+    reader.onload = function (evt) {
+      loadInstructions(evt.target.result);
+      loadRegisters(evt.target.result);
+      startExecution();
+    };
+  };
 
   /* Função para percorrer as linhas do txt com uma flag de inicio e parada e uma função para ação */
   const goThroughLines = useCallback(
@@ -109,6 +117,14 @@ function SimulatorProvider({ children }) {
       }
     },
     []
+  );
+
+  /* Função para salvar os registradores do arquivo TXT */
+  const loadRegisters = useCallback(
+    (text) => {
+      goThroughLines(text, 'REGISTERS', 'CODE', addRegister);
+    },
+    [goThroughLines]
   );
 
   /* Função para criar registrador se ele não existe */
@@ -183,6 +199,36 @@ function SimulatorProvider({ children }) {
           registers,
           createRegisterIfItDoesntExist
         ),
+        100100: or(
+          binaryString,
+          action,
+          registers,
+          createRegisterIfItDoesntExist
+        ),
+        100101: and(
+          binaryString,
+          action,
+          registers,
+          createRegisterIfItDoesntExist
+        ),
+        '000010': j(
+          binaryString,
+          action,
+          registers,
+          createRegisterIfItDoesntExist
+        ),
+        '000011': jal(
+          binaryString,
+          action,
+          registers,
+          createRegisterIfItDoesntExist
+        ),
+        // '001000': jr(
+        //   binaryString,
+        //   action,
+        //   registers,
+        //   createRegisterIfItDoesntExist
+        // ),
       };
 
       if (opcode === '000000') {
@@ -193,22 +239,6 @@ function SimulatorProvider({ children }) {
       return instructionsMap[opcode];
     },
     [memories, registers, createRegisterIfItDoesntExist]
-  );
-
-  /* Função para salvar os registradores do arquivo TXT */
-  const loadRegisters = useCallback(
-    (text) => {
-      goThroughLines(text, 'REGISTERS', 'MEMORY', addRegister);
-    },
-    [goThroughLines]
-  );
-
-  /* Função para salvar as memórias do arquivo TXT */
-  const loadMemories = useCallback(
-    (text) => {
-      goThroughLines(text, 'MEMORY', 'CODE', addMemory);
-    },
-    [goThroughLines]
   );
 
   const loadInstructions = useCallback(
